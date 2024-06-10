@@ -21,13 +21,13 @@ This section contains code to:
         * elevation: elevation as measured by Farr et al. 2007.
         * slope: local gradient computed using the 4-connected neighbors (30m pixels) around each location (derived from elevation layer).
         * HR_Sample_#: There are 100 columsn, each eith names ranging from HR_Sample_1 through HR_Sample_100. Each is a logical column indicating whether a location intersects the approximated home range in the given sample #.  
-  * Depredation_Risk_Layer.tif
+  * Depredation_Mortality_Risk_Layer.tif
       * Raster with 30x30m pixels that each contain a value (0-1) for predicted depredation mortality risk (derived from depredation mortality risk models).
-  * Study_Area_Boundaries.shp
+  * Study_Area_Boundaries.gpkg
       * Geometry column for study area boundaries. 
-  * cb_2018_us.state_5m.shp
+  * State_Boundaries.gpkg
       * Geometry column for U.S. state bounadries.
-  * cnty24k09_1_multipart.shp
+  * California_Boundaries.gpkg
       * Geometry column for California county boundaries.
 * Reproduce the following:
     * Depredation mortality risk models used to predict spatially varying depredation mortality risk.
