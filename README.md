@@ -16,6 +16,7 @@ This section contains code to:
         * Dist_Cover: Euclidean distance to the nearest occurence of forest or shrub cover (derived from NLCD Landcover).
         * Dist_Developed_Low: Euclidean distance to the nearest occurence of low-intensity development (derived from NLCD Landcover).
         * Dist_Developed_Open: Euclidean distance to the nearest developed open area (derived from NLCD Landcover).
+        * Distance_Developed: Euclidead distance to the nearest occurence of any class of development (derived from NLCD Landcover).
         * Dist_Local_Roads: Euclidean distance to the nearest local road (derived from USGS National Transportation Dataset).
         * Distance Building: Euclidean distance to the nearest building (derived from Microsoft Buildings Dataset).
         * elevation: elevation as measured by Farr et al. 2007.
