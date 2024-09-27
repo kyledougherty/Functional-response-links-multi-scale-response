@@ -12,14 +12,12 @@ library(parallel)
 library(MuMIn)
 library(bfp)
 
-getwd()
-setwd("Chapter_1/Open_Research_Submission")
 # Data to reproduce results is provided via onedrive links and code throughout
 # this file will download and store in relevant directories. 
 # Note that some files are rather large, the download timeout below may need to
 # be adjusted based on download speeds. 
 options(timeout = max(7200, getOption("timeout")))
-
+dir.create("Data")
 # Depredation mortality risk ---------------------------------------------------
 
 ## Download depredation mortality risk data using onedrive link and store locally
@@ -315,7 +313,7 @@ Main_Panel <- ggplot() +
           fill = NA, 
           color = "black", 
           lwd = 1.5) + 
-  scale_fill_gradientn(colors = colorRamps::blue2red(100), 
+  scale_fill_gradientn(colors = viridis::viridis(100),# colorRamps::blue2red(100), 
                        limits = c(0, 0.962),
                        breaks = c(0, 0.962),
                        labels = c("      Low", "High       "),
@@ -324,23 +322,24 @@ Main_Panel <- ggplot() +
             mutate(Label = "Study Areas"),
           aes(color = Label), 
           fill = NA, 
+          # color = "red", 
           lwd = 3) + 
-  scale_color_manual(values = c("Study Areas" = "black")) +
+  scale_color_manual(values = c("Study Areas" = "red")) +
   guides(color = guide_legend(title = "", 
                               # title.position = "top",
                               label.position = "top",
-                              keywidth = unit(8, "cm"),
+                              keywidth = unit(12, "cm"),
                               order = 1), 
          fill = guide_colorbar(ticks.colour = NA,
                                title = "Depredation Mortality Risk",
                                title.position = "top",
                                order = 2)) + 
-  ggsn::north(data = ext(Depredation_Risk) %>% 
-                as.polygons() %>%
-                st_as_sf() %>% 
-                st_set_crs(st_crs(Depredation_Risk)), 
-              location = "bottomleft", 
-              anchor = c(x = -119.5, y = 40.75)) +
+  # ggsn::north(data = ext(Depredation_Risk) %>% 
+  #                  as.polygons() %>%
+  #                  st_as_sf() %>% 
+  #                  st_set_crs(st_crs(Depredation_Risk)), 
+  #             location = "bottomleft", 
+  #             anchor = c(x = -119.5, y = 40.75)) +
   ggsn::scalebar(data = ext(Depredation_Risk) %>% 
                    as.polygons() %>%
                    st_as_sf() %>% 
@@ -348,17 +347,29 @@ Main_Panel <- ggplot() +
                  transform = TRUE, 
                  dist = 200,
                  location = "bottomleft",
-                 anchor = c(x = -119.5, y = 40.25),
+                 anchor = c(x = -119.25, y = 40.25),
                  dist_unit = "km", 
                  st.size = 10) + 
-  geom_label_repel(data = Cities %>%
-                     filter(City %in% c("San Francisco",
-                                        "San Jose")),
-                   aes(x = X,
-                       y = Y,
-                       label = City),
-                   size = 10,
-                   nudge_x = -3) +
+  # geom_rect(aes(xmin = -126,
+  #               xmax = -121,
+  #               ymin = 32,
+  #               ymax = 34),
+  #           fill = NA,
+  #           color = "black") +
+  # annotate("text",
+  #          label = "Study Areas and Depredation Mortality Risk",
+  #          fontface = "bold",
+  #          size = 7,
+  #          x = -116.75,
+#          y = 41.75) +
+geom_label_repel(data = Cities %>%
+                   filter(City %in% c("San Francisco",
+                                      "San Jose")),
+                 aes(x = X,
+                     y = Y,
+                     label = City),
+                 size = 10,
+                 nudge_x = -3) +
   geom_label_repel(data = Cities %>%
                      filter(!City %in% c("San Francisco",
                                          "San Jose")),
@@ -389,13 +400,14 @@ Main_Panel <- ggplot() +
                  label = Label),
              size = 10) +
   theme_void() + 
-  theme(legend.position = c(0.625, 0.87), 
+  theme(legend.position = c(0.5425, 0.87), 
         legend.direction = "horizontal",
-        legend.key.width = unit(1.75, "cm"),
+        legend.key.width = unit(2.5, "cm"),
         legend.justification = "left",
         legend.title = element_text(face = "bold", 
                                     size = 20,
-                                    vjust = 1),
+                                    vjust = 1, 
+                                    hjust = 0.5),
         legend.text = element_text(size = 20, 
                                    face = "bold"))
 
@@ -444,7 +456,57 @@ Main_Second_Order_RSF <- glmmTMB(Used ~ Depredation_Risk + Dist_Forest + Dist_Sh
 saveRDS(Main_Second_Order_RSF, 
         "Results/Second_Order_RSF_Models/Main_Second_Order_RSF.RDS")
 
+Second_Order_Model_Summary <- Main_Second_Order_RSF %>% 
+  mutate(Var = case_when(Var == "Depredation_Risk" ~ "Mortality \nRisk", 
+                         Var == "Dist_Forest" ~ "Distance to \n Forest", 
+                         Var == "Dist_Herbaceous" ~ "Distance to \nHerbaceous",
+                         Var == "Dist_Shrub" ~ "Distance to \nShrub",
+                         Var == "elevation" ~ "Elevation", 
+                         Var == "slope" ~ "Slope"), 
+         Var = factor(Var, 
+                      levels = c("Mortality \nRisk", 
+                                 "Distance to \n Forest",
+                                 "Distance to \nShrub",
+                                 "Distance to \nHerbaceous",
+                                 "Elevation", 
+                                 "Slope")))
+
 ## Create Figure 3a
+ggplot(data = Second_Order_Model_Summary, 
+                              aes(x = Var, 
+                                  y = Estimate.x, 
+                                  ymin = `2.5 %`, 
+                                  ymax = `97.5 %`)) + 
+  geom_hline(yintercept = 0, 
+             col = "red", 
+             lty = 2) + 
+  geom_errorbar(position = position_dodge2(width = 0.25), 
+                width = 0.05) + 
+  geom_point(size = 1.5, 
+             position = position_dodge2(width = 0.25)) + 
+  labs(title = "A) Coarse-Scale Resource Selection", 
+       y = "Beta Coefficient") + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 0,
+                                   vjust = 0.5,
+                                   color = "black", 
+                                   size = 14, 
+                                   face = "bold"),
+        axis.text.y = element_text(color = "black", 
+                                   size = 14, 
+                                   face = "bold"),
+        axis.title.y = element_text(color = "black", 
+                                    size = 16, 
+                                    face = "bold"),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color = "black", 
+                                  size = 16, 
+                                  face = "bold", 
+                                  vjust = -6, 
+                                  hjust = 0.02), 
+        plot.tag = element_text(face = "bold", 
+                                size = 16), 
+        plot.tag.position = c(0.1, 0.98))
 
 ## Fit Second Order RSF Null Model ----
 Second_Order_RSF_Null_Model <- glmmTMB(Used ~ (1|Study/ID), 
@@ -700,12 +762,12 @@ expand.grid(Depredation_Risk = c(0.25, 0.5, 0.75),
               alpha = 0.5) + 
   geom_line(aes(col = Depredation_Risk_OS), 
             size = 1.5) + 
-  scale_fill_manual(values = c("Low (0.25)" = "darkgreen", 
-                               "Moderate (0.50)" = "orange", 
-                               "High (0.75)" = "red")) + 
-  scale_color_manual(values = c("Low (0.25)" = "darkgreen", 
-                                "Moderate (0.50)" = "orange", 
-                                "High (0.75)" = "red")) + 
+  scale_fill_manual(values = c("Low (0.25)" = viridis::viridis(3)[[1]], 
+                               "Moderate (0.50)" = viridis::viridis(3)[[2]], 
+                               "High (0.75)" = viridis::viridis(3)[[3]])) + 
+  scale_color_manual(values = c("Low (0.25)" = viridis::viridis(3)[[1]], 
+                                "Moderate (0.50)" = viridis::viridis(3)[[2]], 
+                                "High (0.75)" = viridis::viridis(3)[[3]])) + 
   labs(col = "Mortality Risk", 
        fill = "Mortality Risk") + 
   theme_classic() + 
