@@ -23,11 +23,8 @@ options(timeout = max(7200, getOption("timeout")))
 # Depredation mortality risk ---------------------------------------------------
 
 ## Download depredation mortality risk data using onedrive link and store locally
-dir.create("Data/Depredation_Mortality_Risk_Data", recursive = TRUE)
-download.file("https://uofnelincoln-my.sharepoint.com/:x:/g/personal/kdougherty8_unl_edu/EeLR36Jh23BKshuDrsrkZtYBtnypRwjf3jL2d-jFMWvcfA?e=Dg69Ti&download=1", 
+download.file("https://uofnelincoln-my.sharepoint.com/:x:/g/personal/kdougherty8_unl_edu/EXumiNHNNDFGr7JODDgbVeEBmx6DchPLfiTLFOQK5GDLQA?e=mc8Xlw&download=1", 
               "Data/Depredation_Mortality_Risk_Data/Depredation_Mortality_Risk_Input_Data.csv")
-
-
 ## Create directory to store results
 dir.create("Results/Depredation_Mortality_Risk_Models", recursive = TRUE)
 
@@ -43,7 +40,7 @@ map(paste0("HR_Sample_", 1:100),
       #   - The HR_Sample_# is a logical column indicating whether a 
       #     location intersected the approximated home range. 
       depredation_mortality_risk_data = read_csv("Data/Depredation_Mortality_Risk_Data/Depredation_Mortality_Risk_Input_Data.csv", 
-                                                 col_select = c(1:14, hr_sample), 
+                                                 col_select = c(1:15, hr_sample), 
                                                  lazy = TRUE) %>%
         # Remove available locations that do not intersect the current 
         # approximation of a home range for individuals not tracked with 
@@ -65,6 +62,7 @@ map(paste0("HR_Sample_", 1:100),
       correlation_matrix = cor(depredation_mortality_risk_data %>%
                                  select(Dist_Developed_Open,
                                         Dist_Developed_Low,
+                                        Distance_Developed,
                                         Dist_Cover,
                                         Dist_Local_Roads,
                                         Distance_Building,
@@ -83,7 +81,7 @@ map(paste0("HR_Sample_", 1:100),
                                              ")"))
       
       # Fit global model with strata(ID) and cluster(County)
-      global = clogit(Used ~ Dist_Developed_Open + Dist_Developed_Low +
+      global = clogit(Used ~ Dist_Developed_Open + Dist_Developed_Low + Distance_Developed + 
                         Distance_Building + Dist_Local_Roads + Dist_Cover +
                         slope + strata(ID) + cluster(County),
                       data = depredation_mortality_risk_data,
@@ -176,7 +174,7 @@ Depredation_Mortality_Risk_Model_Summary  <- Depredation_Mortality_Risk_Models %
 ## Fit depredation mortality risk model with only individuals that were tracked 
 ## with GPS telemetry. 
 GPS_Depredation_Mortality_Risk_Data = read_csv("Data/Depredation_Mortality_Risk_Data/Depredation_Mortality_Risk_Input_Data.csv", 
-                                               col_select = c(1:14), 
+                                               col_select = c(1:15), 
                                                lazy = TRUE) %>% 
   filter(GPS_Tracked == TRUE) %>%
   # Rescale each continuous variable by
@@ -193,6 +191,7 @@ GPS_Depredation_Mortality_Risk_Data = read_csv("Data/Depredation_Mortality_Risk_
 correlation_matrix = cor(GPS_Depredation_Mortality_Risk_Data %>%
                            select(Dist_Developed_Open,
                                   Dist_Developed_Low,
+                                  Distance_Developed,
                                   Dist_Cover,
                                   Dist_Local_Roads,
                                   Distance_Building,
@@ -210,7 +209,7 @@ subset_expression = parse(text = paste("!(", paste("(",
                                        ")"))
 
 ## Fit global model with strata(ID) and cluster(County)
-Global_GPS_Depredation_Risk_Model = clogit(Used ~ Dist_Developed_Open + Dist_Developed_Low +
+Global_GPS_Depredation_Risk_Model = clogit(Used ~ Dist_Developed_Open + Dist_Developed_Low + Distance_Developed +
                   Distance_Building + Dist_Local_Roads + Dist_Cover +
                   slope + strata(ID) + cluster(County),
                 data = GPS_Depredation_Mortality_Risk_Data,
